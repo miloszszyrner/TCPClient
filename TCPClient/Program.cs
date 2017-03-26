@@ -12,7 +12,7 @@ namespace TCPClient
     {
         static void Main(string[] args)
         {
-            string host = "127.0.0.1";
+            string host = "localhost";
             int port = 7;
             Socket socket = Connect1(host, port);
 
@@ -29,7 +29,14 @@ namespace TCPClient
 
             Console.WriteLine("Establishing Connection to {0}",
                 host);
-            s.Connect(IPs[0], port);
+            foreach (IPAddress address in IPs)
+            {
+                if (IPAddress.Parse(address.ToString()).AddressFamily == AddressFamily.InterNetwork)
+                {
+                    s.Connect(address, port);
+                    break;
+                }
+            }
             Console.WriteLine("Connection established");
             return s;
         }
