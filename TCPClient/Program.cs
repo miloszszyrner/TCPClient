@@ -14,9 +14,39 @@ namespace TCPClient
         {
             string host = "localhost";
             int port = 7;
+            int tempPort;
+            string message = String.Empty;
+            Console.WriteLine("Siema, default port = 7, Would you like to change it? If yes press y, otherwise click any key");
+            if(Console.ReadLine().Equals("y")) 
+            {
+                do
+                {
+                    Console.WriteLine("Give me the port");
+                    if(int.TryParse(Console.ReadLine(),out tempPort))
+                    {
+                        port = tempPort;
+                    }
+                } while(port < 0);
+            }
             Socket socket = Connect1(host, port);
-
-            SendMessage("Michal", socket);
+            while (true)
+            {
+                Console.WriteLine("Insert data to send, 0 will close everything");
+                message = Console.ReadLine();
+                if (!message.Equals("0"))
+                {
+                    SendMessage(message, socket);
+                    GetMessage(socket);
+                }
+                else
+                {
+                    Console.WriteLine("End of data exchange, closing socket");
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                    Console.WriteLine("Socket closed");
+                    break;
+                }
+            } 
             Console.Read();
         }
         public static Socket Connect1(string host, int port)
@@ -44,6 +74,20 @@ namespace TCPClient
         {
             byte[] bytesToSend = ASCIIEncoding.ASCII.GetBytes(textToSend);
             s.Send(bytesToSend);
+        }
+        public static void GetMessage(Socket s)
+        {
+            byte[] bytes = new byte[512];
+            try
+            {
+                s.Receive(bytes);
+                Console.WriteLine("Received data:");
+                Console.WriteLine(Encoding.ASCII.GetString(bytes).TrimEnd('\0'));
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine("{0} Error code: {1}.", e.Message, e.ErrorCode);
+            }
         }
     }
 }
