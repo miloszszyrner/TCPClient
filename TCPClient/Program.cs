@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security;
 
 namespace TCPClient
 {
@@ -28,25 +29,37 @@ namespace TCPClient
                     }
                 } while(port < 0);
             }
-            Socket socket = Connect1(host, port);
-            while (true)
-            {
-                Console.WriteLine("Insert data to send, 0 will close everything");
-                message = Console.ReadLine();
-                if (!message.Equals("0"))
-                {
-                    SendMessage(message, socket);
-                    GetMessage(socket);
-                }
-                else
-                {
-                    Console.WriteLine("End of data exchange, closing socket");
-                    socket.Shutdown(SocketShutdown.Both);
-                    socket.Close();
-                    Console.WriteLine("Socket closed");
-                    break;
-                }
-            } 
+			try
+			{
+				Socket socket = Connect1(host, port);
+				while (true)
+				{
+					Console.WriteLine("Insert data to send, 0 will close everything");
+					message = Console.ReadLine();
+					if (!message.Equals("0"))
+					{
+						SendMessage(message, socket);
+						GetMessage(socket);
+					}
+					else
+					{
+						Console.WriteLine("End of data exchange, closing socket");
+						socket.Shutdown(SocketShutdown.Both);
+						socket.Close();
+						Console.WriteLine("Socket closed");
+						break;
+					}
+				}
+			}	catch (ArgumentNullException e)
+			{
+				Console.WriteLine("Address jest null");
+			}	catch (SocketException e)
+			{
+				Console.WriteLine("Niepoowodzenie dostępu do gniazda");
+			}	catch (ObjectDisposedException e)
+			{
+				Console.WriteLine("Gniazdo zostało zamkniete");
+			} 
             Console.Read();
         }
         public static Socket Connect1(string host, int port)
@@ -63,7 +76,23 @@ namespace TCPClient
             {
                 if (IPAddress.Parse(address.ToString()).AddressFamily == AddressFamily.InterNetwork)
                 {
-                    s.Connect(address, port);
+					try
+					{
+						s.Connect(address, port);
+					}	catch (ArgumentOutOfRangeException e)
+					{
+						Console.WriteLine("Błedny numer portu");
+					}	catch (NotSupportedException e)
+					{
+						Console.WriteLine("Proba polaczenia do gniazd i protokołów innych niż InterNetwork lub InterNetwortkV6");
+					}	catch (ArgumentException e)
+					{
+						Console.WriteLine("Długość address jest zero");
+					}	catch (InvalidOperationException e)
+					{
+						Console.WriteLine("Gniazdo jest słuchające - listener");
+					}
+                   
                     break;
                 }
             }
@@ -84,9 +113,9 @@ namespace TCPClient
                 Console.WriteLine("Received data:");
                 Console.WriteLine(Encoding.ASCII.GetString(bytes).TrimEnd('\0'));
             }
-            catch (SocketException e)
+            catch (SecurityException e)
             {
-                Console.WriteLine("{0} Error code: {1}.", e.Message, e.ErrorCode);
+                Console.WriteLine("Brak uprawnień przy wykonywaniu metody");
             }
         }
     }
