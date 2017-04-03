@@ -17,7 +17,8 @@ namespace TCPClient
             int port = 7;
             int tempPort;
             string message = String.Empty;
-            Console.WriteLine("Siema, default port = 7, Would you like to change it? If yes press y, otherwise click any key");
+			Socket socket = null;
+			Console.WriteLine("Siema, default port = 7, Would you like to change it? If yes press y, otherwise click any key");
             if(Console.ReadLine().Equals("y")) 
             {
                 do
@@ -31,7 +32,7 @@ namespace TCPClient
             }
 			try
 			{
-				Socket socket = Connect1(host, port);
+				socket = Connect1(host, port);
 				while (true)
 				{
 					Console.WriteLine("Insert data to send, 0 will close everything");
@@ -53,12 +54,18 @@ namespace TCPClient
 			}	catch (ArgumentNullException e)
 			{
 				Console.WriteLine("Address jest null");
+				socket.Shutdown(SocketShutdown.Both);
+				socket.Close();
 			}	catch (SocketException e)
 			{
 				Console.WriteLine("Niepoowodzenie dostępu do gniazda");
+				socket.Shutdown(SocketShutdown.Both);
+				socket.Close();
 			}	catch (ObjectDisposedException e)
 			{
 				Console.WriteLine("Gniazdo zostało zamkniete");
+				socket.Shutdown(SocketShutdown.Both);
+				socket.Close();
 			} 
             Console.Read();
         }
@@ -82,15 +89,23 @@ namespace TCPClient
 					}	catch (ArgumentOutOfRangeException e)
 					{
 						Console.WriteLine("Błedny numer portu");
+						s.Shutdown(SocketShutdown.Both);
+						s.Close();
 					}	catch (NotSupportedException e)
 					{
 						Console.WriteLine("Proba polaczenia do gniazd i protokołów innych niż InterNetwork lub InterNetwortkV6");
+						s.Shutdown(SocketShutdown.Both);
+						s.Close();
 					}	catch (ArgumentException e)
 					{
 						Console.WriteLine("Długość address jest zero");
+						s.Shutdown(SocketShutdown.Both);
+						s.Close();
 					}	catch (InvalidOperationException e)
 					{
 						Console.WriteLine("Gniazdo jest słuchające - listener");
+						s.Shutdown(SocketShutdown.Both);
+						s.Close();
 					}
                    
                     break;
@@ -116,7 +131,9 @@ namespace TCPClient
             catch (SecurityException e)
             {
                 Console.WriteLine("Brak uprawnień przy wykonywaniu metody");
-            }
+				s.Shutdown(SocketShutdown.Both);
+				s.Close();
+			}
         }
     }
 }
